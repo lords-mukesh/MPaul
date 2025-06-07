@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MPaul Exchange - Tap & Earn</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #121212;
+    color: #eee;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  #tapBtn {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #00c853;
+    border: none;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 6px 10px rgba(0, 200, 83, 0.6);
+    transition: background 0.3s ease;
+    margin: 20px 0;
+  }
+  #tapBtn:hover {
+    background: #00e676;
+  }
+  #stats {
+    width: 100%;
+    max-width: 400px;
+    background: #1e1e1e;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+  .stat-item {
+    margin: 12px 0;
+  }
+  #upgradeBtn {
+    background: #2962ff;
+    border: none;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(41, 98, 255, 0.6);
+    transition: background 0.3s ease;
+  }
+  #upgradeBtn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  #upgradeBtn:hover:not(:disabled) {
+    background: #448aff;
+  }
+  #achievements {
+    margin-top: 20px;
+    background: #292929;
+    padding: 15px;
+    border-radius: 12px;
+  }
+  #achievements h2 {
+    margin-top: 0;
+  }
+  .achievement {
+    background: #333;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin: 6px 0;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<h1>MPaul Exchange</h1>
+<button id="tapBtn">Tap & Earn</button>
+
+<div id="stats">
+  <div class="stat-item">Total Coins: <span id="coins">0</span> $MPX</div>
+  <div class="stat-item">Upgrade Level: <span id="level">0</span></div>
+  <button id="upgradeBtn" disabled>Upgrade (Cost: <span id="upgradeCost">500</span> $MPX)</button>
+</div>
+
+<div id="achievements">
+  <h2>Achievements</h2>
+  <div id="achievementsList">
+    <div class="achievement">Tap 100 times - Locked</div>
+    <div class="achievement">Earn 1000 coins - Locked</div>
+    <div class="achievement">Reach upgrade level 5 - Locked</div>
+  </div>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const tapBtn = document.getElementById('tapBtn');
+  const coinsDisplay = document.getElementById('coins');
+  const levelDisplay = document.getElementById('level');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const upgradeCostDisplay = document.getElementById('upgradeCost');
+  const achievementsList = document.getElementById('achievementsList');
+
+  let coins = 0;
+  let upgradeLevel = 0;
+  let tapsCount = 0;
+
+  // Base tap value and upgrade increment
+  const baseTapValue = 10;
+  const upgradeIncrement = 5;
+
+  function updateUpgradeButton() {
+    const cost = 500 + upgradeLevel * 250;
+    upgradeCostDisplay.textContent = cost;
+    upgradeBtn.disabled = coins < cost;
+  }
+
+  function updateAchievements() {
+    const achievements = achievementsList.children;
+    // Unlock achievements based on current stats
+    achievements[0].textContent = tapsCount >= 100 ? 'Tap 100 times - Unlocked 🎉' : 'Tap 100 times - Locked';
+    achievements[1].textContent = coins >= 1000 ? 'Earn 1000 coins - Unlocked 🎉' : 'Earn 1000 coins - Locked';
+    achievements[2].textContent = upgradeLevel >= 5 ? 'Reach upgrade level 5 - Unlocked 🎉' : 'Reach upgrade level 5 - Locked';
+  }
+
+  tapBtn.onclick = () => {
+    tapsCount++;
+    const tapValue = baseTapValue + upgradeLevel * upgradeIncrement;
+    coins += tapValue;
+    coinsDisplay.textContent = coins;
+    tapsCountDisplay = tapsCount;
+    levelDisplay.textContent = upgradeLevel;
+
+    updateUpgradeButton();
+    updateAchievements();
+
+    // Optionally send data to Telegram bot (expand later)
+    if (window.Telegram.WebApp) {
+      Telegram.WebApp.sendData(JSON.stringify({ coins: coins, level: upgradeLevel, taps: tapsCount }));
+    }
+  };
+
+  upgradeBtn.onclick = () => {
+    const cost = 500 + upgradeLevel * 250;
+    if (coins >= cost) {
+      coins -= cost;
+      upgradeLevel++;
+      coinsDisplay.textContent = coins;
+      levelDisplay.textContent = upgradeLevel;
+      updateUpgradeButton();
+      updateAchievements();
+
+      // Optionally send data to Telegram bot (expand later)
+      if (window.Telegram.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify({ coins: coins, level: upgradeLevel, taps: tapsCount }));
+      }
+    }
+  };
+
+  // Initialize button state on page load
+  updateUpgradeButton();
+  updateAchievements();
+
+  // Optional: Telegram WebApp ready and main button hide (to keep UI clean)
+  if (window.Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.MainButton.hide();
+  }
+</script>
+
+</body>
+</html>
